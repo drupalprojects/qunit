@@ -1,0 +1,6 @@
+; $Id$
+name = QUnit
+description = The QUnit JavaScript testing framework for JavaScript testing within Drupal.
+package = Development
+core = 7.x
+files[] = qunit.module

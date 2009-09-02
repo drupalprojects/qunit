@@ -1,0 +1,62 @@
+<?php
+// $Id$
+
+/**
+ * Implement hook_permission().
+ */
+function qunit_permission() {
+  if (!module_exists('simpletest')) {
+    return array(
+      'administer unit tests' => array(
+        'title' => t('Administer unit tests'),
+        'description' => t('Manage and run automated testing. %warning', array('%warning' => t('Warning: Give to trusted roles only; this permission has security implications.'))),
+      ),
+    );
+  }
+}
+
+
+/**
+ * Implement hook_menu().
+ */
+function qunit_menu() {
+  $items = array();
+
+  $items['admin/config/development/qunit'] = array(
+    'title' => 'JavaScript testing',
+    'description' => "Run the tests for Drupal's JavaScript code, which will make sure that the JavaScript works properly your browser.",
+    'page callback' => 'qunit_run_tests',
+    'access arguments' => array('administer unit tests'),
+  );
+
+  return $items;
+}
+
+/**
+ * Implement hook_library().
+ */
+function qunit_library() {
+  $libraries = array();
+
+  $libraries['qunit'] = array(
+    'title' => 'QUnit',
+    'website' => 'http://docs.jquery.com/QUnit',
+    'version' => 'dev',
+    'js' => array(
+      drupal_get_path('module', 'qunit') . '/testrunner.js' => array(),
+    ),
+    'css' => array(
+      drupal_get_path('module', 'qunit') . '/testsuite.css' => array(),
+    ),
+  );
+
+  return $libraries;
+}
+
+/**
+ * Page callback to run the tests.
+ */
+function qunit_run_tests() {
+  drupal_add_library('qunit', 'qunit');
+  print '<html><head><title>' . drupal_get_title() . '</title>' . drupal_get_js() . drupal_get_css() . '</head><body></body></html>';
+}
