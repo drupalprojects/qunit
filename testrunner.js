@@ -9,7 +9,6 @@
  *
  * $Id$
  */
-
 (function($) {
 
 // Test for equality any JavaScript type.

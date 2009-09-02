@@ -43,7 +43,8 @@ function qunit_library() {
     'website' => 'http://docs.jquery.com/QUnit',
     'version' => 'dev',
     'js' => array(
-      drupal_get_path('module', 'qunit') . '/testrunner.js' => array(),
+      drupal_get_path('module', 'qunit') . '/testrunner.js' => array('weight' => -6),
+      drupal_get_path('module', 'qunit') . '/test.js' => array('weight' => -5),
     ),
     'css' => array(
       drupal_get_path('module', 'qunit') . '/testsuite.css' => array(),
@@ -58,5 +59,5 @@ function qunit_library() {
  */
 function qunit_run_tests() {
   drupal_add_library('qunit', 'qunit');
-  print '<html><head><title>' . drupal_get_title() . '</title>' . drupal_get_js() . drupal_get_css() . '</head><body></body></html>';
+  print '<html><head><title>' . drupal_get_title() . '</title>' . drupal_get_js() . drupal_get_css() . '</head><body><div id="main"></div></body></html>';
 }
