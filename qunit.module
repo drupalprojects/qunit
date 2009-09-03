@@ -62,8 +62,10 @@ function qunit_run_tests() {
     drupal_goto(url('', array('absolute' => TRUE)) . drupal_get_path('module', 'qunit') . '/qunit.php');
   }
   drupal_add_library('qunit', 'qunit');
+  $directories = array();
   foreach (module_list() as $module) {
     $directory = drupal_get_path('module', $module);
+    $directories[$module] = $directory;
     if (file_exists("$directory/$module.test.js") && is_file("$directory/$module.test.js")) {
       drupal_add_js("$directory/$module.test.js");
     }
@@ -73,6 +75,7 @@ function qunit_run_tests() {
       }
     }
   }
+  drupal_add_js(array('modules' => $directories), 'setting');
   print '<html><head><title>' . drupal_get_title() . '</title>' . drupal_get_js() . drupal_get_css() . '</head><body id="body">
         <h1 id="header">Drupal JavaScript Test Suite</h1>
         <h2 id="banner"></h2>
