@@ -59,5 +59,11 @@ function qunit_library() {
  */
 function qunit_run_tests() {
   drupal_add_library('qunit', 'qunit');
-  print '<html><head><title>' . drupal_get_title() . '</title>' . drupal_get_js() . drupal_get_css() . '</head><body><div id="main"></div></body></html>';
+  print '<html><head><title>' . drupal_get_title() . '</title>' . drupal_get_js() . drupal_get_css() . '</head><body id="body">
+        <h1 id="header">Drupal JavaScript Test Suite</h1>
+        <h2 id="banner"></h2>
+        <h2 id="userAgent"></h2>
+        <ol id="tests"></ol>
+        <div id="main" style="display: none;"></div>
+</body></html>';
 }

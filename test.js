@@ -1,6 +1,6 @@
 // $Id$
 
-(function ($) {
+(function($) {
 
 /**
  * Provide a Drupal-specific wrapper for the QUnit JavaScript test framework.
@@ -11,13 +11,26 @@ Drupal.behaviors.runTests = {
   attach: function(context, settings) {
     var index;
     for (index in Drupal.tests) {
-      var test = Drupal.tests[index];
-      var info = test.getInfo();
-      var title = Drupal.t('@name <div class="description">(@description)</div>', {'@name': info.name, '@description': info.description});
-      module(info.group, test);
-      test(title, test.test);
+      var testCase = Drupal.tests[index];
+      var info = testCase.getInfo();
+      module(info.group, testCase);
+      test(info.name, testCase.test);
     }
   }
 };
 
-})();
+Drupal.tests.helloWorld = {
+  getInfo: function() {
+    return {
+      name: 'Hello, world',
+      description: 'basic test',
+      group: 'To be removed',
+    };
+  },
+  test: function() {
+    expect(1);
+    ok(true, 'pass');
+  }
+}
+
+})(jQuery);
