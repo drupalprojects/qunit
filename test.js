@@ -19,18 +19,4 @@ Drupal.behaviors.runTests = {
   }
 };
 
-Drupal.tests.helloWorld = {
-  getInfo: function() {
-    return {
-      name: 'Hello, world',
-      description: 'basic test',
-      group: 'To be removed',
-    };
-  },
-  test: function() {
-    expect(1);
-    ok(true, 'pass');
-  }
-}
-
 })(jQuery);
