@@ -58,6 +58,9 @@ function qunit_library() {
  * Page callback to run the tests.
  */
 function qunit_run_tests() {
+  if (!variable_get('clean_url', 0) && empty($GLOBALS['qunit_hack'])) {
+    drupal_goto(url('', array('absolute' => TRUE)) . drupal_get_path('module', 'qunit') . '/qunit.php');
+  }
   drupal_add_library('qunit', 'qunit');
   foreach (module_list() as $module) {
     $directory = drupal_get_path('module', $module);
