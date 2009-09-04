@@ -44,16 +44,39 @@ Drupal.tests.testT = {
       group: Drupal.t('System')
     };
   },
+  setup: function() {
+    this.originalLocale = Drupal.locale;
+    Drupal.locale = {
+      'strings': {
+        'Translation 1': '1 noitalsnarT',
+        'Translation with a @placeholder': '@placeholder a with Translation',
+        'Translation with another %placeholder': '%placeholder in another translation',
+        'Literal !placeholder': 'A literal !placeholder',
+        'Test unspecified placeholder': 'Unspecified placeholder test'
+      }
+    };
+  },
   test: function() {
-    expect(4);
+    expect(9);
 
     var html = '<tag attribute="value">Apples & Oranges</tag>';
     var escaped = '&lt;tag attribute=&quot;value&quot;&gt;Apples &amp; Oranges&lt;/tag&gt;';
 
+    // Test placeholders.
     equals(Drupal.t('Hello world! @html', {'@html': html}), 'Hello world! ' + escaped, Drupal.t('The "@" placeholder escapes the variable.'));
     equals(Drupal.t('Hello world! %html', {'%html': html}), 'Hello world! <em>' + escaped + '</em>', Drupal.t('The "%" placeholder escapes the variable and themes it as a placeholder.'));
     equals(Drupal.t('Hello world! !html', {'!html': html}), 'Hello world! ' + html, Drupal.t('The "!" placeholder passes the variable through as-is.'));
     equals(Drupal.t('Hello world! html', {'html': html}), 'Hello world! <em>' + escaped + '</em>', Drupal.t('Other placeholders act as "%" placeholders do.'));
+
+    // Test actual translations.
+    equals(Drupal.t('Translation 1'), '1 noitalsnarT', Drupal.t('Basic translations work.'));
+    equals(Drupal.t('Translation with a @placeholder', {'@placeholder': '<script>alert("xss")</script>'}), '&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt; a with Translation', Drupal.t('Translations with the "@" placeholder work.'));
+    equals(Drupal.t('Translation with another %placeholder', {'%placeholder': '<script>alert("xss")</script>'}), '<em>&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;</em> in another translation', Drupal.t('Translations with the "%" placeholder work.'));
+    equals(Drupal.t('Literal !placeholder', {'!placeholder': '<script>alert("xss")</script>'}), 'A literal <script>alert("xss")</script>', Drupal.t('Translations with the "!" placeholder work.'));
+    equals(Drupal.t('Test unspecified placeholder', {'placeholder': '<script>alert("xss")</script>'}), 'Unspecified <em>&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;</em> test', Drupal.t('Translations with unspecified placeholders work.'));
+  },
+  teardown: function() {
+
   }
 };
 
