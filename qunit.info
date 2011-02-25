@@ -1,4 +1,3 @@
-; $Id$
 name = QUnit
 description = The QUnit JavaScript testing framework for JavaScript testing within Drupal.
 package = Development
