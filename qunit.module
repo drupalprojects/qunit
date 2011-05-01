@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Implement hook_permission().
+ * Implements hook_permission().
  */
 function qunit_permission() {
   if (!module_exists('simpletest')) {
@@ -14,72 +14,59 @@ function qunit_permission() {
   }
 }
 
-
 /**
- * Implement hook_menu().
+ * Implements hook_menu().
  */
 function qunit_menu() {
-  $items = array();
-
   $items['admin/config/development/qunit'] = array(
     'title' => 'JavaScript testing',
     'description' => "Run the tests for Drupal's JavaScript code, which will make sure that the JavaScript works properly your browser.",
     'page callback' => 'qunit_run_tests',
     'access arguments' => array('administer unit tests'),
   );
-
   return $items;
 }
 
 /**
- * Implement hook_library().
+ * Implements hook_library().
  */
 function qunit_library() {
-  $libraries = array();
-
   $libraries['qunit'] = array(
     'title' => 'QUnit',
     'website' => 'http://docs.jquery.com/QUnit',
-    'version' => 'dev',
+    'version' => '20110420',
     'js' => array(
-      drupal_get_path('module', 'qunit') . '/testrunner.js' => array('weight' => -6),
-      drupal_get_path('module', 'qunit') . '/test.js' => array('weight' => -5),
+      // The QUnit JavaScript library.
+      drupal_get_path('module', 'qunit') . '/qunit/qunit/qunit.js' => array('weight' => JS_LIBRARY),
+      // The QUnit Drupal behavior.
+      drupal_get_path('module', 'qunit') . '/qunit.admin.js' => array(),
     ),
     'css' => array(
-      drupal_get_path('module', 'qunit') . '/testsuite.css' => array(),
+      // The QUnit library CSS framework.
+      drupal_get_path('module', 'qunit') . '/qunit/qunit/qunit.css' => array(),
+      // CSS fixes to make QUnit look nicer when in Drupal.
+      drupal_get_path('module', 'qunit') . '/qunit.admin.css' => array(),
     ),
   );
-
   return $libraries;
 }
 
 /**
- * Page callback to run the tests.
+ * Implements hook_library_alter().
+ */
+function qunit_library_alter(&$libraries, $module) {
+  // Add available JavaScript tests and dependencies.
+  if ($module == 'qunit') {
+    $libraries['qunit']['js'][drupal_get_path('module', 'qunit') . '/drupal.test.js'] = array();
+  }
+}
+
+/**
+ * Menu callback; Page to run all the JavaScript tests.
  */
 function qunit_run_tests() {
-  if (!variable_get('clean_url', 0) && empty($GLOBALS['qunit_hack'])) {
-    drupal_goto(url('', array('absolute' => TRUE)) . drupal_get_path('module', 'qunit') . '/qunit.php');
-  }
   drupal_add_library('qunit', 'qunit');
-  $directories = array();
-  foreach (module_list() as $module) {
-    $directory = drupal_get_path('module', $module);
-    $directories[$module] = $directory;
-    if (file_exists("$directory/$module.test.js") && is_file("$directory/$module.test.js")) {
-      drupal_add_js("$directory/$module.test.js");
-    }
-    if (file_exists("$directory/tests") && is_dir("$directory/tests")) {
-      foreach (file_scan_directory("$directory/tests", '/.*?\.test\.js/') as $file) {
-        drupal_add_js($file->uri);
-      }
-    }
-  }
-  drupal_add_js(array('modules' => $directories), 'setting');
-  print '<html><head><title>' . drupal_get_title() . '</title>' . drupal_get_js() . drupal_get_css() . '</head><body id="body">
-        <h1 id="header">Drupal JavaScript Test Suite</h1>
-        <h2 id="banner"></h2>
-        <h2 id="userAgent"></h2>
-        <ol id="tests"></ol>
-        <div id="main" style="display: none;"></div>
-</body></html>';
+  $output = '<div id="qunit-wrapper"><h1 id="qunit-header">QUnit Test Suite</h1><h2 id="qunit-banner"></h2><div id="qunit-testrunner-toolbar"></div><h2 id="qunit-userAgent"></h2><ol id="qunit-tests"></ol><div id="qunit-fixture">test markup</div></div>';
+  return $output;
 }
+
