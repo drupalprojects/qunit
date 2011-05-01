@@ -57,7 +57,8 @@ function qunit_library() {
 function qunit_library_alter(&$libraries, $module) {
   // Add available JavaScript tests and dependencies.
   if ($module == 'qunit') {
-    $libraries['qunit']['js'][drupal_get_path('module', 'qunit') . '/drupal.test.js'] = array();
+    $libraries['qunit']['js'][drupal_get_path('module', 'qunit') . '/tests/drupal.test.js'] = array();
+    $libraries['qunit']['js'][drupal_get_path('module', 'qunit') . '/tests/jquery.once.test.js'] = array();
   }
 }
 
