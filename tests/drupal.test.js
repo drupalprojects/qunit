@@ -1,8 +1,7 @@
-
 (function($) {
 
 /**
- * Test the Drupal.checkPlain function.
+ * Tests Drupal.checkPlain().
  */
 Drupal.tests.testCheckPlain = {
   getInfo: function() {
@@ -80,7 +79,7 @@ Drupal.tests.testT = {
 };
 
 /**
- * Tests Drupal.attachBehaviors().
+ * Tests Drupal.attachBehaviors() and Drupal.detachBehaviors.
  */
 Drupal.tests.testBehaviors = {
   getInfo: function() {
@@ -128,5 +127,73 @@ Drupal.tests.testBehaviors = {
     Drupal.behaviors = this.originalBehaviors;
   }
 };
+
+/**
+ * Tests Drupal.encodePath().
+ */
+Drupal.tests.encodePath = {
+  getInfo: function() {
+    return {
+      name: 'Encode path',
+      description: 'Tests the Drupal.encodePath() JavaScript function for properly encoding paths.',
+      group: 'System'
+    };
+  },
+  test: function() {
+    expect(9);
+
+    // Test basic strings.
+    equals(Drupal.encodePath('/foo/bar'), '/foo/bar');
+    equals(Drupal.encodePath('"test'), '%22test');
+    equals(Drupal.encodePath('Test&1'), 'Test%261');
+    equals(Drupal.encodePath('Test>test'), 'Test%3Etest');
+    equals(Drupal.encodePath('Test<test'), 'Test%3Ctest');
+
+    // Test other data types.
+    equals(Drupal.encodePath(['abc&', 'def?']), 'abc%26%2Cdef%3F');
+    equals(Drupal.encodePath(1), '1');
+
+    // Combined tests.
+    equals(Drupal.encodePath('http://example.com/foo/bar?example=foobar'), 'http%3A//example.com/foo/bar%3Fexample%3Dfoobar');
+    equals(Drupal.encodePath('search/node?keys=search/with/slashes/"and / quotes"'), 'search/node%3Fkeys%3Dsearch/with/slashes/%22and%20/%20quotes%22');
+  }
+};
+
+/**
+ * Tests JavaScript theming.
+ */
+Drupal.tests.theme = {
+  getInfo: function() {
+    return {
+      name: 'Theme',
+      description: 'Tests the JavaScript implementation of the Drupal theming layer.',
+      group: 'System'
+    };
+  },
+  test: function() {
+    var themeBackup = Drupal.theme;
+    // Theme overides.
+    Drupal.theme.prototype.example = Drupal.theme.prototype.placeholder;
+    equals(Drupal.theme('example', '<example>'), '<em class="placeholder">&lt;example&gt;</em>');
+    Drupal.theme.prototype.example = function (str) {
+      return 'Test !!' + str + '?!';
+    };
+    equals(Drupal.theme('example', '<example>'), 'Test !!<example>?!');
+
+    // Theme arguments.
+    var args = [];
+    Drupal.theme.prototype.argCheck = function (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) {
+      args = [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10];
+//console.log(args);
+    }
+    Drupal.theme('argCheck', 15, 'foo', 'bar', 'baz', null, undefined, 'http://example.com/', 3.14159, 'abc', 'def');
+    var index;
+    var bigArray = [15, 'foo', 'bar', 'baz', null, undefined, 'http://example.com/', 3.14159, 'abc', 'def'];
+    for (index in bigArray) {
+      equals(args[index], bigArray[index]);
+    }
+    Drupal.theme = themeBackup;
+  }
+}
 
 })(jQuery);

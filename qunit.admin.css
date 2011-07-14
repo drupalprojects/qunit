@@ -9,3 +9,8 @@
 #qunit-wrapper label {
  display: inline; 
 }
+
+#qunit-test-iframe {
+  max-height: 1px;
+  max-width: 1px;
+}
