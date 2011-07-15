@@ -28,9 +28,9 @@ class DrupalQUnitTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Override _assert() so we never insert anything into the database.
+   * Override assert() so we never insert anything into the database.
    */
-  public function _assert() {
+  public function assert() {
     /* Do nothing */
   }
 }
