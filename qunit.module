@@ -32,6 +32,20 @@ function qunit_menu() {
  */
 function qunit_test() {
   $db_prefix = $_COOKIE['simpletest_db_prefix'];
+
+  // Push our database prefix onto the global database connection configuration
+  // and update the static variable cache.
+  $connection_info = Database::getConnectionInfo('default');
+  Database::renameConnection('default', 'simpletest_original_default');
+  foreach ($connection_info as $target => $value) {
+    $connection_info[$target]['prefix'] = array(
+      'default' => $value['prefix']['default'] . $db_prefix,
+    );
+  }
+  Database::addConnectionInfo('default', 'default', $connection_info['default']);
+  cache_clear_all('variables', 'cache_bootstrap');
+  $GLOBALS['conf'] = variable_initialize();
+
   $content = variable_get('qunit_test_content_' . $db_prefix, '');
   $js = variable_get('qunit_test_js_' . $db_prefix, array());
   $library = variable_get('qunit_test_library_' . $db_prefix, array());
