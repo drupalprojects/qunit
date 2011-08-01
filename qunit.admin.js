@@ -7,6 +7,16 @@ Drupal.tests = Drupal.tests || {};
 Drupal.browser = Drupal.browser || {};
 Drupal.browser.lock = Drupal.browser.lock || false;
 
+Drupal.behaviors.toggleIframe = {
+  attach: function(context, settings) {
+    $('#qunit-test-iframe', context).before('<input id="qunit-iframe-toggle" type="button" value="' + Drupal.t('Show/hide test frame') + '" />');
+    $('#qunit-iframe-toggle').click(function() {
+      $('#qunit-test-iframe').toggleClass('visible');
+      return false;
+    });
+  }
+};
+
 Drupal.behaviors.runTests = {
   attach: function(context, settings) {
     var index;

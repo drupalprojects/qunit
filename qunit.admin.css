@@ -11,6 +11,14 @@
 }
 
 #qunit-test-iframe {
+  border: none;
   max-height: 1px;
   max-width: 1px;
+}
+
+#qunit-test-iframe.visible {
+  height: 1000px;
+  max-height: none;
+  max-width: none;
+  width: 100%;
 }
