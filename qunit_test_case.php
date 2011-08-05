@@ -26,5 +26,12 @@ class DrupalQUnitTestCase extends DrupalWebTestCase {
     variable_del('qunit_test_js_' . $this->databasePrefix);
     variable_del('qunit_test_library_' . $this->databasePrefix);
   }
+
+  /**
+   * Override assert() so we never insert anything into the database.
+   */
+  public function assert() {
+    /* Do nothing */
+  }
 }
 
