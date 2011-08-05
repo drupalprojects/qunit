@@ -22,65 +22,93 @@ Drupal.behaviors.runTests = {
     var index;
     var loaded = 0;
     for (index in Drupal.tests) {
-      var testCase = Drupal.tests[index];
-      var info = testCase.getInfo();
-      module(info.group, testCase);
-      test(info.name, testCase.test);
+      Drupal.tests[index].run();
     }
   }
 };
 
-Drupal.testFrameGet = function () {
+Drupal.Test = function() {
+  this.run = function() {
+    module(this.getInfo().group, this);
+    test(this.getInfo().name, this.test);
+  }
+}
+
+/**
+ * Stub class for unit tests.
+ */
+Drupal.UnitTest = function() {
+}
+Drupal.UnitTest.prototype = Drupal.Test;
+
+/**
+ * Stub class for web tests.
+ */
+Drupal.WebTest = function() {
+  this.Browser = new Drupal.Browser();
+}
+Drupal.WebTest.prototype = Drupal.Test;
+
+/**
+ * Reusable Drupal iframe browser class.
+ */
+Drupal.Browser = function() {
   var iframe = $('#qunit-test-iframe').get(0);
   iframe = (iframe.contentWindow || iframe.contentDocument);
   if (iframe.document) {
     iframe = iframe.document;
   }
-  return iframe.body;
-};
-
-Drupal.browser.init = function(classname, fn) {
-  Drupal.browser.acquireLock(function() {
-    result = $.post(Drupal.settings.basePath + '?q=qunit/ajax/' + classname + '/setUp', {'token': Drupal.settings.formToken}, function(data) {
-      document.cookie = 'simpletest_db_prefix=' + data.dbPrefix;
+  this.testFrame = iframe.body;
+  this.init = function(classname, fn) {
+    this.Lock.acquire(function() {
+      result = $.post(Drupal.settings.basePath + '?q=qunit/ajax/' + classname + '/setUp', {'token': Drupal.settings.formToken}, function(data) {
+        document.cookie = 'simpletest_db_prefix=' + data.dbPrefix;
+        fn();
+      });
+    });
+  };
+  this.get = function(dest, fn) {
+    $('#qunit-test-iframe').attr('src', Drupal.settings.basePath + '?q=' + dest);
+    $('#qunit-test-iframe').load(function() {
+      this.parent$ = $;
+      $ = jQuery = $(this).get(0).contentWindow.jQuery;
       fn();
     });
-  });
-};
-
-Drupal.browser.get = function(dest, fn) {
-  $('#qunit-test-iframe').attr('src', Drupal.settings.basePath + '?q=' + dest);
-  $('#qunit-test-iframe').load(function() {
-    Drupal.browser.parent$ = $;
-    Drupal.browser.$ = $(this).get(0).contentWindow.jQuery;
-    fn();
-  });
-}
-
-Drupal.browser.exit = function(classname, fn) {
-  document.cookie = 'simpletest_db_prefix=';
-  if (Drupal.browser.parent$ !== undefined) {
-    $ = jQuery = Drupal.browser.parent$;
-    Drupal.browser.parent$ = undefined;
-  }
-  $.post(Drupal.settings.basePath + '?q=qunit/ajax/' + classname + '/tearDown', {'token': Drupal.settings.formToken}, function(data) {
-    fn();
-  });
-  Drupal.browser.releaseLock();
-};
-
-Drupal.browser.acquireLock = function(fn) {
-  if (Drupal.browser.lock == false) {
-    Drupal.browser.lock = true;
-    if (fn) {
-      fn();
+  };
+  this.exit = function(classname, fn) {
+    document.cookie = 'simpletest_db_prefix=';
+    if (Drupal.browser.parent$ !== undefined) {
+      $ = jQuery = Drupal.browser.parent$;
+      Drupal.browser.parent$ = undefined;
     }
-  }
-  setTimeout(Drupal.browser.acquireLock, 1000);
-}
+    $.post(Drupal.settings.basePath + '?q=qunit/ajax/' + classname + '/tearDown', {'token': Drupal.settings.formToken}, function(data) {
+      fn();
+    });
+    this.Lock.release();
+  };
+};
 
-Drupal.browser.releaseLock = function(fn) {
-  Drupal.browser.lock = false;
+/**
+ * Reusable Drupal Lock class.
+ */
+Drupal.Lock = function(waitTime) {
+  this.locked = false;
+  this.waitTime = waitTime || 1000;
+  this.acquire = function(fn) {
+    if (this.locked == false) {
+      this.locked = true;
+      if (fn) {
+        fn();
+      }
+    }
+    setTimeout(function() {
+      this.acquire(fn);
+    }, this.waitTime);
+  };
+  this.release = function(fn) {
+    this.locked = false;
+    fn();
+  };
 }
 
 })(jQuery);
