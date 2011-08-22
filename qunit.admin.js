@@ -4,8 +4,6 @@
  * Provide a Drupal-specific wrapper for the QUnit JavaScript test framework.
  */
 Drupal.tests = Drupal.tests || {};
-Drupal.browser = Drupal.browser || {};
-Drupal.browser.lock = Drupal.browser.lock || false;
 
 Drupal.behaviors.toggleIframe = {
   attach: function(context, settings) {
@@ -22,24 +20,25 @@ Drupal.behaviors.runTests = {
     var index;
     var loaded = 0;
     for (index in Drupal.tests) {
-      Drupal.tests[index].run();
+      var test = new Drupal.tests[index];
+      test.run();
     }
   }
 };
 
 Drupal.Test = function() {
-  this.run = function() {
-    module(this.getInfo().group, this);
-    test(this.getInfo().name, this.test);
-  }
 }
+Drupal.Test.prototype.run = function() {
+  module(this.getInfo().group, this);
+  test(this.getInfo().name, this.test);
+;}
 
 /**
  * Stub class for unit tests.
  */
 Drupal.UnitTest = function() {
 }
-Drupal.UnitTest.prototype = Drupal.Test;
+Drupal.UnitTest.prototype = new Drupal.Test;
 
 /**
  * Stub class for web tests.
@@ -47,45 +46,48 @@ Drupal.UnitTest.prototype = Drupal.Test;
 Drupal.WebTest = function() {
   this.Browser = new Drupal.Browser();
 }
-Drupal.WebTest.prototype = Drupal.Test;
+Drupal.WebTest.prototype = new Drupal.Test;
 
 /**
- * Reusable Drupal iframe browser class.
+ * Reusable Browser class, currently used by Drupal.WebTest.
  */
 Drupal.Browser = function() {
+  this.Lock = new Drupal.Lock;
+};
+
+Drupal.Browser.prototype.init = function(classname, fn) {
   var iframe = $('#qunit-test-iframe').get(0);
   iframe = (iframe.contentWindow || iframe.contentDocument);
   if (iframe.document) {
     iframe = iframe.document;
   }
   this.testFrame = iframe.body;
-  this.init = function(classname, fn) {
-    this.Lock.acquire(function() {
-      result = $.post(Drupal.settings.basePath + '?q=qunit/ajax/' + classname + '/setUp', {'token': Drupal.settings.formToken}, function(data) {
-        document.cookie = 'simpletest_db_prefix=' + data.dbPrefix;
-        fn();
-      });
-    });
-  };
-  this.get = function(dest, fn) {
-    $('#qunit-test-iframe').attr('src', Drupal.settings.basePath + '?q=' + dest);
-    $('#qunit-test-iframe').load(function() {
-      this.parent$ = $;
-      $ = jQuery = $(this).get(0).contentWindow.jQuery;
+  this.Lock.acquire(function() {
+    result = $.post(Drupal.settings.basePath + '?q=qunit/ajax/' + classname + '/setUp', {'token': Drupal.settings.formToken}, function(data) {
+      document.cookie = 'simpletest_db_prefix=' + data.dbPrefix;
       fn();
     });
-  };
-  this.exit = function(classname, fn) {
-    document.cookie = 'simpletest_db_prefix=';
-    if (Drupal.browser.parent$ !== undefined) {
-      $ = jQuery = Drupal.browser.parent$;
-      Drupal.browser.parent$ = undefined;
+  });
+};
+
+Drupal.Browser.prototype.get = function(dest, fn) {
+  $('#qunit-test-iframe').attr('src', Drupal.settings.basePath + '?q=' + dest);
+  $('#qunit-test-iframe').load(function() {
+    var child$ = jQuery = $(this).get(0).contentWindow.jQuery;
+    if (fn) {
+      fn(child$);
     }
-    $.post(Drupal.settings.basePath + '?q=qunit/ajax/' + classname + '/tearDown', {'token': Drupal.settings.formToken}, function(data) {
+  });
+};
+
+Drupal.Browser.prototype.exit = function(classname, fn) {
+  document.cookie = 'simpletest_db_prefix=';
+  $.post(Drupal.settings.basePath + '?q=qunit/ajax/' + classname + '/tearDown', {'token': Drupal.settings.formToken}, function(data) {
+    if (fn) {
       fn();
-    });
-    this.Lock.release();
-  };
+    }
+  });
+  this.Lock.release();
 };
 
 /**
@@ -94,21 +96,28 @@ Drupal.Browser = function() {
 Drupal.Lock = function(waitTime) {
   this.locked = false;
   this.waitTime = waitTime || 1000;
-  this.acquire = function(fn) {
-    if (this.locked == false) {
-      this.locked = true;
-      if (fn) {
-        fn();
-      }
+};
+
+Drupal.Lock.prototype.acquire = function(fn) {
+  if (this.locked == false) {
+    this.locked = true;
+    if (fn) {
+      fn();
     }
+  }
+  else {
+    var self = this;
     setTimeout(function() {
-      this.acquire(fn);
+      self.acquire(fn);
     }, this.waitTime);
-  };
-  this.release = function(fn) {
-    this.locked = false;
+  }
+};
+
+Drupal.Lock.prototype.release = function(fn) {
+  this.locked = false;
+  if (fn) {
     fn();
-  };
-}
+  }
+};
 
 })(jQuery);
