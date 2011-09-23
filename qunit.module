@@ -1,72 +1,212 @@
 <?php
 
 /**
- * Implements hook_permission().
+ * @file provide a page to run qunit js unit testing.
+ * @see Qunit: http://docs.jquery.com/Qunit
  */
-function qunit_permission() {
+
+/**
+ * Implementation of hook_help().
+ */
+function qunit_help($path, $arg) {
+  switch($path) {
+    case 'admin/build/qunit':
+      return theme('qunit_help_summary');
+      break;
+
+    case 'admin/help#qunit':
+      return theme('qunit_help');
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function qunit_perm() {
   if (!module_exists('simpletest')) {
     return array(
-      'administer unit tests' => array(
-        'title' => t('Administer unit tests'),
-        'description' => t('Manage and run automated testing. %warning', array('%warning' => t('Warning: Give to trusted roles only; this permission has security implications.'))),
-      ),
+      'administer unit tests',
     );
   }
 }
 
 /**
- * Implements hook_menu().
+ * Implementation of hook_menu().
  */
 function qunit_menu() {
-  $items['admin/config/development/qunit'] = array(
-    'title' => 'JavaScript testing',
+  $items = array();
+
+  $items['admin/build/qunit'] = array(
+    'title' => 'QUnit Javascript Unit Tests',
     'description' => "Run the tests for Drupal's JavaScript code, which will make sure that the JavaScript works properly your browser.",
     'page callback' => 'qunit_run_tests',
     'access arguments' => array('administer unit tests'),
+    'type' => MENU_NORMAL_ITEM,
   );
+
   return $items;
 }
 
 /**
- * Implements hook_library().
+ * Implementation of hook_theme().
  */
-function qunit_library() {
-  $libraries['qunit'] = array(
-    'title' => 'QUnit',
-    'website' => 'http://docs.jquery.com/QUnit',
-    'version' => '20110420',
-    'js' => array(
-      // The QUnit JavaScript library.
-      drupal_get_path('module', 'qunit') . '/qunit/qunit/qunit.js' => array('weight' => JS_LIBRARY),
-      // The QUnit Drupal behavior.
-      drupal_get_path('module', 'qunit') . '/qunit.admin.js' => array(),
+function qunit_theme($existing, $type, $theme, $path) {
+  return array(
+    'qunit_test' => array(
+      'arguments' => array(
+        'test_markup' => array(),
+        'additions' => array(),
+      ),
+      'path' => drupal_get_path('module', 'qunit') .'/inc/',
+      'template' => 'qunit-test-page',
     ),
-    'css' => array(
-      // The QUnit library CSS framework.
-      drupal_get_path('module', 'qunit') . '/qunit/qunit/qunit.css' => array(),
-      // CSS fixes to make QUnit look nicer when in Drupal.
-      drupal_get_path('module', 'qunit') . '/qunit.admin.css' => array(),
+    'qunit_help' => array(
+      'path' => drupal_get_path('module', 'qunit') .'/inc/',
+      'template' => 'qunit-help',
     ),
+    'qunit_help_summary' => array(),
   );
-  return $libraries;
 }
 
 /**
- * Implements hook_library_alter().
+ * Menu callback; returns as basic and unthemed a page to run qunit on.
  */
-function qunit_library_alter(&$libraries, $module) {
-  // Add available JavaScript tests and dependencies.
-  if ($module == 'qunit') {
-    $libraries['qunit']['js'][drupal_get_path('module', 'qunit') . '/drupal.test.js'] = array();
+function qunit_run_tests() {
+  //the main job of this module, adding QUnit:
+  $qunit_path = drupal_get_path('module', 'qunit') .'/inc/';
+  drupal_add_js($qunit_path .'qunit/qunit/qunit.js');
+  drupal_add_css($qunit_path .'qunit/qunit/qunit.css');
+
+  //instead of Drupal behaviors we'll run through tests our own way
+  drupal_add_js($qunit_path .'qunit.admin.js');
+  //drupal-specific styling fixes
+  drupal_add_css($qunit_path .'qunit.admin.css');
+
+  //allow others to include their stuff
+  $markup = $additions = array();
+  drupal_alter('qunit_test', $markup, $additions);
+  return theme('qunit_test', $markup, $additions);
+}
+
+/**
+ * Implementation of hook_qunit_test_alter().
+ */
+function qunit_qunit_test_alter(&$test_markup, &$additions) {
+  //include tests against Drupal's javascript
+  drupal_add_js(drupal_get_path('module', 'qunit') .'/inc/drupal.test.js');
+}
+
+/**
+ * Template preprocessor for qunit_test theme function.
+ */
+function template_preprocess_qunit_test(&$vars) {
+  //prepare test suite's title
+  $vars['qunit_title'] = t('QUnit !site Tests',
+    array('!site' => variable_get('site_name', 'Drupal'))
+  );
+
+  //prepare raw test markup for #qunit-fixture
+  if (is_array($vars['test_markup']) && count($vars['test_markup'])) {
+    $vars['qunit_test_markup'] = implode("\n", $vars['test_markup']);
+  }
+
+  //prepare raw html output added by others
+  if (is_array($vars['additions']) && count($vars['additions'])) {
+    $vars['qunit_additions'] = implode("\n", $vars['additions']);
   }
 }
 
 /**
- * Menu callback; Page to run all the JavaScript tests.
+ * Theme function to generate a small summary of what this module does.
  */
-function qunit_run_tests() {
-  drupal_add_library('qunit', 'qunit');
-  $output = '<div id="qunit-wrapper"><h1 id="qunit-header">QUnit Test Suite</h1><h2 id="qunit-banner"></h2><div id="qunit-testrunner-toolbar"></div><h2 id="qunit-userAgent"></h2><ol id="qunit-tests"></ol><div id="qunit-fixture">test markup</div></div>';
+function theme_qunit_help_summary() {
+  $output = NULL;
+  //inserts
+  $qunit = l(t('QUnit'), 'http://docs.jquery.com/Qunit');
+  $tests = l(t('Unit Tests'), 'http://en.wikipedia.org/wiki/Unit_test');
+  $alter = l(t('drupal_alter'),
+    'http://api.drupal.org/api/drupal/includes--common.inc/function/drupal_alter/6');
+
+  //copy
+  $output .= '<p>';
+  $output .= t('Renders a !qunit page to run Javascript !tests on. This
+    module does not come with any tests of its own, but instead allows
+    other modules to define tests to be run on /admin/build/qunit via a
+    !alter hook_qunit_test_alter().', array(
+      '!qunit' => $qunit,
+      '!tests' => $tests,
+      '!alter' => $alter,
+    ));
+  $output .= '</p>';
+
   return $output;
 }
 
+/**
+ * Template preprocessor for qunit_help theme function.
+ */
+function template_preprocess_qunit_help(&$vars) {
+  //prepare screenshot of admin ui
+  $img_path = drupal_get_path('module', 'qunit') .'/inc/images/screenshot.png';
+  $alt = t('Screenshot of Drupal QUnit');
+  $title = t('Screenshot of QUnit Test in Drupal admin UI.');
+  $attr = array('class' => 'qunit-screenshot');
+  $vars['screenshot_img'] = theme('image', $img_path, $alt, $title, $attr, FALSE);
+
+  //prepare copy for overview_and_admin_use
+  $qunit = l(t('QUnit'), 'http://docs.jquery.com/Qunit');
+  $test_page = l('admin/build/qunit', 'admin/build/qunit');
+  $copy['overview_and_admin_use'] = t('Drupal module to render a page for
+    Javascript unit tests to be run using !qunit. This module does not come
+    with any tests of its own, but instead allows other modules to define tests
+    to be run on !test_page.',
+      array('!qunit' => $qunit, '!test_page' => $test_page));
+
+  //prepare copy for permissions
+  $copy['permissions'] = t('All that is needed to run tests is the permission,
+    "administer unit tests". Any module can include its tests to be run
+    there.');
+
+  //prepare copy for including_tests
+  $drupal_alter = l('hook_qunit_test_alter',
+    'http://api.drupal.org/api/drupal/includes--common.inc/function/drupal_alter/6');
+  $copy['including_tests'] = t('In your module or theme you can take advantage
+    of !drupal_alter to both include your tests and specify your test classes
+    (you must do both).', array('!drupal_alter' => $drupal_alter));
+
+  //prepare copy for example
+  $list = array(
+    t('Include your actual javascript tests (<code>drupal_add_js()</code>, as
+      usual) on the <code>Drupal.tests</code> object.'),
+    t("Build any output you'd like appended to QUnit's page render, using
+      additions array."),
+    t('Add any test markup you need in the <code>#qunit-fixture</code>, using
+      <code>$test_markup</code> array (see QUnit docs for more on this).'),
+  );
+  $actions = theme('item_list', $list, NULL, 'ul');
+  $copy['example'] = t("Below is an example of how to include tests to be run
+    by the QUnit module. In your module, simply take advantage of QUnit's
+    drupal_alter() which fires when the Unit tests are about to run. Use this
+    hook_TYPE_alter(), <strong>qunit_test</strong>, to do at least the first of
+    three things: !actions", array('!actions' => $actions));
+
+  //prepare copy for writing_tests
+  $qunit_api = l(t('QUnit API'), 'http://docs.jquery.com/Qunit',
+    array('fragment' => 'API_documentation'));
+  $copy['writing_tests'] = t('See !qunit_api to learn how to write tests
+    against your custom Javascript.', array('!qunit_api' => $qunit_api));
+
+  //prepare copy for drupal_7
+  $attempting = l(t('am attempting'), 'http://drupal.org/node/1286808');
+  $branches = l(t('drupal-6 branch'), 'http://drupalcode.org/project/qunit.git/heads');
+  $d7_module = l(t('D7 module'), 'http://drupal.org/project/qunit');
+  $copy['drupal_7'] = t('This is a Drupal 6 implementation only. I !attempting
+    to move this module into the official QUnit drupal.org project as a
+    !branches.  For a Drupal 7 version, please follow the progress of the
+    !d7_module.',
+    array('!attempting' => $attempting, '!d7_module' => $d7_module));
+
+  //expose the prepared copy
+  $vars['copy'] = $copy;
+}
