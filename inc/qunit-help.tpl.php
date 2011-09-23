@@ -44,11 +44,11 @@
   /**
    * Implemenation of hook_qunit_test_alter().
    */
-  function mymodule_qunit_test_alter(&amp;$test_markup, &amp;$additions) {
+  function mymodule_qunit_test_alter(&amp;$data) {
     //add your custom tests
     drupal_add_js(drupal_get_path('module', 'mymodule') .'/inc/mymodule_bunch_o_tests.js');
-  //$test_markup[] = theme('mymodule_qunit_test_markup'); //optional
-  //$additions[] = theme('mymodule_additional_output'); //optional
+  //$data['test_markup'][] = theme('mymodule_qunit_test_markup'); //optional
+  //$data['additions'][] = theme('mymodule_additional_output'); //optional
   }
   </code>
 </pre>
@@ -73,11 +73,11 @@
         equal(YourHelpers.isArray([]), true, 'expecting [] to be verified as an YourHelpers.isArray as an Array.');
         equal(YourHelpers.isArray({}), false, 'expecting {} to be verified by YourHelpers.isArray as an Object.');
       }
-    }
+    };
 
     Drupal.tests.testMyModuleSecondTest = {
       //...
-    }
+    };
   })(jQuery);
   </code>
 </pre>

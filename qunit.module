@@ -84,15 +84,15 @@ function qunit_run_tests() {
   drupal_add_css($qunit_path .'qunit.admin.css');
 
   //allow others to include their stuff
-  $markup = $additions = array();
-  drupal_alter('qunit_test', $markup, $additions);
-  return theme('qunit_test', $markup, $additions);
+  $data = array('markup' => array(), 'additions' => array());
+  drupal_alter('qunit_test', $data);
+  return theme('qunit_test', $data['markup'], $data['additions']);
 }
 
 /**
  * Implementation of hook_qunit_test_alter().
  */
-function qunit_qunit_test_alter(&$test_markup, &$additions) {
+function qunit_qunit_test_alter(&$data) {
   //include tests against Drupal's javascript
   drupal_add_js(drupal_get_path('module', 'qunit') .'/inc/drupal.test.js');
 }
