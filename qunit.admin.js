@@ -49,6 +49,43 @@ Drupal.WebTest = function() {
 Drupal.WebTest.prototype = new Drupal.Test;
 
 /**
+ * Set up a test database on the server and initialize the iframe.
+ */
+Drupal.WebTest.prototype.setup = function() {
+  this.className = this.getInfo().serverClass;
+  if (!this.className) {
+    throw Drupal.t('Subclasses of Drupal.WebTest must define the serverClass property in their getInfo() method.');
+  }
+  // Give the database 5 minutes to set up, then give up.
+  // This takes about 1 minute for me, but slower computers might have more trouble.
+  // Also gives a very reasonable amount of time to debug the script.
+  stop(600000);
+  // Set up the iframe and run qunit/ajax/MachineNameTestCase/setUp.
+  this.Browser.init(this.className, jQuery.proxy(this.loadTestContent, this));
+};
+
+/**
+ * Load the HTML and JS into the iframe for testing.
+ */
+Drupal.WebTest.prototype.loadTestContent = function() {
+  this.Browser.get('qunit/test', jQuery.proxy(this.start, this));
+};
+
+Drupal.WebTest.prototype.start = function (child$) {
+  if (child$) {
+    this.child$ = child$;
+    start();
+  }
+  else {
+    throw Drupal.t('No jQuery object was returned from the browser. Make sure the serverClass is valid.');
+  }
+};
+
+Drupal.WebTest.prototype.teardown = function () {
+  this.Browser.exit(this.className);
+};
+
+/**
  * Reusable Browser class, currently used by Drupal.WebTest.
  */
 Drupal.Browser = function() {

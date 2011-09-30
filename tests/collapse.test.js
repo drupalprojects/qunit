@@ -15,22 +15,9 @@ Drupal.tests.Collapse.prototype.getInfo = function() {
   return {
     'name': 'Collapsible fieldsets',
     'description': 'Tests collapsible fieldsets to make sure they collapse and uncollapse correctly.',
-    'group': 'System'
+    'group': 'System',
+    'serverClass': 'CollapseTestCase'
   };
-};
-
-Drupal.tests.Collapse.prototype.setup = function() {
-  // Give the database 5 minutes to set up, then give up.
-  // This takes about 1 minute for me, but slower computers might have more trouble.
-  // Also gives a very reasonable amount of time to debug the script.
-  stop(600000);
-  var self = this;
-  this.Browser.init('CollapseTestCase', function() {
-    self.Browser.get('qunit/test', function(child$) {
-      self.child$ = child$;
-      start();
-    });
-  });
 };
 
 Drupal.tests.Collapse.prototype.test = function() {
@@ -95,10 +82,6 @@ Drupal.tests.Collapse.prototype.test = function() {
       start();
     }, collapseDelay);
   }, collapseDelay);
-};
-
-Drupal.tests.Collapse.prototype.teardown = function() {
-  this.Browser.exit('CollapseTestCase');
 };
 
 })(jQuery);
