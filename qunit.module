@@ -39,8 +39,17 @@ function qunit_menu() {
 
   $items['admin/build/qunit'] = array(
     'title' => 'QUnit Javascript Unit Tests',
-    'description' => "Run the tests for Drupal's JavaScript code, which will make sure that the JavaScript works properly your browser.",
+    'description' => "Run all tests JavaScript unit tests across your site, which will make sure that the JavaScript works properly your browser.",
     'page callback' => 'qunit_run_tests',
+    'access arguments' => array('administer unit tests'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['admin/build/qunit/%qunitset'] = array(
+    'title' => 'QUnit Javascript Unit Tests',
+    'description' => "Run only specific Javascript unit tests, which will make sure that the JavaScript works properly your browser.",
+    'page callback' => 'qunit_run_tests',
+    'page arguments' => array(3), //@see qunitset_load().
     'access arguments' => array('administer unit tests'),
     'type' => MENU_NORMAL_ITEM,
   );
@@ -72,7 +81,7 @@ function qunit_theme($existing, $type, $theme, $path) {
 /**
  * Menu callback; returns as basic and unthemed a page to run qunit on.
  */
-function qunit_run_tests() {
+function qunit_run_tests($modules = array()) {
   //the main job of this module, adding QUnit:
   $qunit_path = drupal_get_path('module', 'qunit') .'/inc/';
   drupal_add_js($qunit_path .'qunit/qunit/qunit.js');
@@ -80,6 +89,11 @@ function qunit_run_tests() {
 
   //instead of Drupal behaviors we'll run through tests our own way
   drupal_add_js($qunit_path .'qunit.admin.js');
+  if (count($modules)) {
+    //only run the requested tests
+    drupal_add_js(array('qunitset' => $modules), 'setting');
+  }
+
   //drupal-specific styling fixes
   drupal_add_css($qunit_path .'qunit.admin.css');
 
@@ -87,6 +101,22 @@ function qunit_run_tests() {
   $data = array('markup' => array(), 'additions' => array());
   drupal_alter('qunit_test', $data);
   return theme('qunit_test', $data['markup'], $data['additions']);
+}
+
+/**
+ * Autoloader for %qunitset requests in menu system.
+ */
+function qunitset_load($qunitset) {
+  $modules = array();
+
+  if (preg_match('/.+;.+/', $qunitset)) {
+    $modules = explode(';', $qunitset);
+  }
+  else { //we've only been passed one module
+    $modules = array(str_replace(';', '', $qunitset));
+  }
+
+  return array_map('check_plain', $modules);
 }
 
 /**

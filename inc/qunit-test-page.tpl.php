@@ -13,6 +13,8 @@
  * used to build $qunit_additions.
  */
 ?>
+<div class="qunit-drupal-messages"></div>
+
 <h1 id="qunit-header"><?php print $qunit_title; ?></h1>
 <h2 id="qunit-banner"></h2>
 <div id="qunit-testrunner-toolbar"></div>
