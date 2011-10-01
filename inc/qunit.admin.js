@@ -4,7 +4,7 @@
 
 Drupal.tests = Drupal.tests || {};
 
-Drupal.behaviors.runTests = function(context) {
+var runTests = function(context) {
   var index,
       loaded = 0,
       testNotRun = true;
@@ -39,3 +39,16 @@ Drupal.behaviors.runTests = function(context) {
     $('div.qunit-drupal-messages').append(error);
   }
 }
+
+/**
+ * Manually run this particular behavior, 'runTests', so that we can run tests
+ * against Drupal's core Drupal.attachBehaviors, without accidentally calling
+ * ourselves into an infinite loop.
+ */
+if (Drupal.jsEnabled) {
+  // Attach all behaviors.
+  $(document).ready(function() {
+    runTests(this);
+  });
+}
+

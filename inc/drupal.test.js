@@ -143,10 +143,10 @@ Drupal.tests.testBehaviors = {
     expect(2);
 
     // Test attaching behaviors.
-    Drupal.behaviors.testBehavior('Attach context 1');
+    Drupal.attachBehaviors('Attach context 1');
 
     // Test attaching behaviors again.
-    Drupal.behaviors.testBehavior('Attach context 2');
+    Drupal.attachBehaviors('Attach context 2');
   },
   teardown: function() {
     Drupal.behaviors = this.originalBehaviors;
