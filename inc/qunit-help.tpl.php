@@ -84,7 +84,3 @@
 
 <p><?php print $copy['writing_tests'];?></p>
 
-<h3><?php print t('Drupal 7'); ?></h3>
-
-<p><?php print $copy['drupal_7'];?></p>
-

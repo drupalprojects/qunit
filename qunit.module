@@ -197,16 +197,6 @@ function template_preprocess_qunit_help(&$vars) {
   $copy['writing_tests'] = t('See !qunit_api to learn how to write tests
     against your custom Javascript.', array('!qunit_api' => $qunit_api));
 
-  //prepare copy for drupal_7
-  $attempting = l(t('am attempting'), 'http://drupal.org/node/1286808');
-  $branches = l(t('drupal-6 branch'), 'http://drupalcode.org/project/qunit.git/heads');
-  $d7_module = l(t('D7 module'), 'http://drupal.org/project/qunit');
-  $copy['drupal_7'] = t('This is a Drupal 6 implementation only. I !attempting
-    to move this module into the official QUnit drupal.org project as a
-    !branches.  For a Drupal 7 version, please follow the progress of the
-    !d7_module.',
-    array('!attempting' => $attempting, '!d7_module' => $d7_module));
-
   //expose the prepared copy
   $vars['copy'] = $copy;
 }
