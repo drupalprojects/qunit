@@ -1,5 +1,6 @@
-
-(function($) {
+/**
+ * @file Javascript unit tests against Drupal's core.
+ */
 
 /**
  * Test the Drupal.checkPlain function.
@@ -129,4 +130,3 @@ Drupal.tests.testBehaviors = {
   }
 };
 
-})(jQuery);

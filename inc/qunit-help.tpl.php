@@ -60,25 +60,23 @@
    * @file mymodule_bunch_o_tests.js
    */
 
-  (function($) {
-    Drupal.tests.testMyModuleFirstTest = {
-      getInfo: function() {
-        return {
-          name: 'isArray',
-          description: 'Test the YourHelpers.isArray() JavaScript function for properly Array/Object detection.',
-          group: 'MyCompany'
-        };
-      },
-      test: function() { //any tests you want, here:
-        equal(YourHelpers.isArray([]), true, 'expecting [] to be verified as an YourHelpers.isArray as an Array.');
-        equal(YourHelpers.isArray({}), false, 'expecting {} to be verified by YourHelpers.isArray as an Object.');
-      }
-    };
+  Drupal.tests.testMyModuleFirstTest = {
+    getInfo: function() {
+      return {
+        name: 'isArray',
+        description: 'Test the YourHelpers.isArray() JavaScript function for properly Array/Object detection.',
+        group: 'MyCompany'
+      };
+    },
+    test: function() { //any tests you want, here:
+      equal(YourHelpers.isArray([]), true, 'expecting [] to be verified as an YourHelpers.isArray as an Array.');
+      equal(YourHelpers.isArray({}), false, 'expecting {} to be verified by YourHelpers.isArray as an Object.');
+    }
+  };
 
-    Drupal.tests.testMyModuleSecondTest = {
-      //...
-    };
-  })(jQuery);
+  Drupal.tests.testMyModuleSecondTest = {
+    //...
+  };
   </code>
 </pre>
 
