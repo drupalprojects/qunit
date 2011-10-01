@@ -130,36 +130,23 @@ Drupal.tests.testBehaviors = {
   setup: function() {
     this.originalBehaviors = Drupal.behaviors;
     var attachIndex = 0;
-    var detachIndex = 0;
-    Drupal.behaviors = {
-      testBehavior: {
-        attach: function(context, settings) {
-          attachIndex++;
-          equals(context, 'Attach context ' + attachIndex, Drupal.t('Attach context matches passed context.'));
-          equals(settings, 'Attach settings ' + attachIndex, Drupal.t('Attach settings match passed settings.'));
-        },
-        detach: function(context, settings) {
-          detachIndex++;
-          equals(context, 'Detach context ' + detachIndex, Drupal.t('Detach context matches passed context.'));
-          equals(settings, 'Detach settings ' + detachIndex, Drupal.t('Detach settings match passed settings.'));
-        }
-      }
+    Drupal.behaviors.testBehavior = function(context) {
+      attachIndex++;
+      equals(
+          context,
+          'Attach context ' + attachIndex,
+          Drupal.t('Attach context matches passed context.')
+          );
     };
   },
   test: function() {
-    expect(8);
+    expect(2);
 
     // Test attaching behaviors.
-    Drupal.attachBehaviors('Attach context 1', 'Attach settings 1');
+    Drupal.behaviors.testBehavior('Attach context 1');
 
     // Test attaching behaviors again.
-    Drupal.attachBehaviors('Attach context 2', 'Attach settings 2');
-
-    // Test detaching behaviors.
-    Drupal.detachBehaviors('Detach context 1', 'Detach settings 1');
-
-    // Try detaching behaviors again.
-    Drupal.detachBehaviors('Detach context 2', 'Detach settings 2');
+    Drupal.behaviors.testBehavior('Attach context 2');
   },
   teardown: function() {
     Drupal.behaviors = this.originalBehaviors;
