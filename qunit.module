@@ -39,7 +39,7 @@ function qunit_menu() {
 
   $items['admin/build/qunit'] = array(
     'title' => 'QUnit Javascript Unit Tests',
-    'description' => "Run all tests JavaScript unit tests across your site, which will make sure that the JavaScript works properly your browser.",
+    'description' => "Run Javascript unit tests across your site, to make sure the JavaScript works properly in your browser.",
     'page callback' => 'qunit_run_tests',
     'access arguments' => array('administer unit tests'),
     'type' => MENU_NORMAL_ITEM,
@@ -47,7 +47,7 @@ function qunit_menu() {
 
   $items['admin/build/qunit/%qunitset'] = array(
     'title' => 'QUnit Javascript Unit Tests',
-    'description' => "Run only specific Javascript unit tests, which will make sure that the JavaScript works properly your browser.",
+    'description' => "Run specific Javascript unit tests, to make sure the JavaScript works properly in your browser.",
     'page callback' => 'qunit_run_tests',
     'page arguments' => array(3), //@see qunitset_load().
     'access arguments' => array('administer unit tests'),
