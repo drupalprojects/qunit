@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file provide a page to run qunit js unit testing.
  * @see Qunit: http://docs.jquery.com/Qunit
@@ -16,6 +15,18 @@ function qunit_help($path, $arg) {
 
     case 'admin/help#qunit':
       return theme('qunit_help');
+      break;
+
+    case 'admin/settings/qunit':
+      $qu = l(t("QUnit's"), 'http://docs.jquery.com/Qunit');
+      $css = l(t('css'), 'http://code.jquery.com/qunit/qunit-git.css');
+      $js = l(t('javascript'), 'http://code.jquery.com/qunit/qunit-git.js');
+      return t('Specify the location in your Drupal installation where !qu !css
+        and !js files can be found.', array(
+          '!qu' => $qu,
+          '!css' => $css,
+          '!js' => $js,
+        ));
       break;
   }
 }
@@ -37,6 +48,7 @@ function qunit_perm() {
 function qunit_menu() {
   $items = array();
 
+  //load all unit tests
   $items['admin/build/qunit'] = array(
     'title' => 'QUnit Javascript Unit Tests',
     'description' => "Run Javascript unit tests across your site, to make sure the JavaScript works properly in your browser.",
@@ -45,12 +57,24 @@ function qunit_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
+  //load specified unit tests
   $items['admin/build/qunit/%qunitset'] = array(
     'title' => 'QUnit Javascript Unit Tests',
     'description' => "Run specific Javascript unit tests, to make sure the JavaScript works properly in your browser.",
     'page callback' => 'qunit_run_tests',
     'page arguments' => array(3), //@see qunitset_load().
     'access arguments' => array('administer unit tests'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['admin/settings/qunit'] = array(
+    'title' => 'QUnit Settings Administration',
+    'description' => "Specify the filesystem location of the QUnit library.",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('qunit_admin_settings_form'),
+    'access arguments' => array('administer unit tests'),
+    'file' => 'qunit.admin.inc',
+    'file path' => drupal_get_path('module', 'qunit'),
     'type' => MENU_NORMAL_ITEM,
   );
 
@@ -80,17 +104,28 @@ function qunit_theme($existing, $type, $theme, $path) {
 
 /**
  * Menu callback; returns as basic and unthemed a page to run qunit on.
+ *
+ * @note This is a menu callback for two menu paths.
+ *
+ * @param array $modules
+ *   QUnit "modules" requested in our menu path.
+ *   @see qunitset_load().
+ *   @see http://docs.jquery.com/QUnit/module#namelifecycle
  */
 function qunit_run_tests($modules = array()) {
   //the main job of this module, adding QUnit:
-  $qunit_path = drupal_get_path('module', 'qunit') .'/inc/';
-  drupal_add_js($qunit_path .'qunit/qunit/qunit.js');
-  drupal_add_css($qunit_path .'qunit/qunit/qunit.css');
+  if (!qunit_add_qunit()) {
+    $message = t('QUnit module was unable to find necessary QUnit javascript and css.');
+    $link = l(t('QUnit Settings'), 'admin/settings/qunit');
+    watchdog('qunit', $message, NULL, WATCHDOG_ERROR, $link);
+    return FALSE;
+  }
 
   //instead of Drupal behaviors we'll run through tests our own way
-  drupal_add_js($qunit_path .'qunit.admin.js');
+  drupal_add_js(drupal_get_path('module', 'qunit') .'/inc/qunit.admin.js');
+
+  //only run the requested tests
   if (count($modules)) {
-    //only run the requested tests
     drupal_add_js(array('qunitset' => $modules), 'setting');
   }
 
@@ -117,6 +152,53 @@ function qunitset_load($qunitset) {
   }
 
   return array_map('check_plain', $modules);
+}
+
+/**
+ * Adds the QUnit project's css and javascript to the page, if available.
+ *
+ * @return bool
+ *  If QUnit's css and javascript were available and loaded.
+ */
+function qunit_add_qunit() {
+  //fallback on remote upstream versions
+  $remote_css = 'http://code.jquery.com/qunit/qunit-git.css';
+  $remote_js = 'http://code.jquery.com/qunit/qunit-git.js';
+  $qpath = array(
+    'css' => variable_get('qunit_lib_css_path', $remote_css),
+    'js' => variable_get('qunit_lib_js_path', $remote_js),
+  );
+
+  //try adding the files
+  if (!empty($qpath['css']) && !empty($qpath['js'])) {
+    //Matches against strings beginning with any one of the following:
+    // 'http://', 'https://', '//'
+    $remote_regex = '/^(http(s)?:)?\/\//';
+
+    //add css correctly, depending on remote or local path
+    if (preg_match($remote_regex, $qpath['css'])) {
+      $script = '<link type="text/css" rel="stylesheet" media="all" href="';
+      $script .= $qpath['css'];
+      $script .= '" />';
+      drupal_set_html_head($script);
+    }
+    else {
+      drupal_add_css($qpath['css']);
+    }
+
+    //add javascript correctly, depending on remote or local path
+    if (preg_match($remote_regex, $qpath['js'])) {
+      $script = '<script type="text/javascript" src="';
+      $script .= $qpath['js'];
+      $script .= '" /></script>';
+      drupal_set_html_head($script);
+    }
+    else {
+      drupal_add_js($qpath['js']);
+    }
+    return TRUE;
+  }
+  return FALSE;
 }
 
 /**
