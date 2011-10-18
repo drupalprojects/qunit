@@ -35,7 +35,10 @@ function qunit_help($path, $arg) {
  * Implementation of hook_perm().
  */
 function qunit_perm() {
-  if (!module_exists('simpletest')) {
+  if (module_exists('simpletest')) {
+    return array();
+  }
+  else {
     return array(
       'administer unit tests',
     );
