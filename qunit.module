@@ -44,7 +44,8 @@ function qunit_test() {
       );
     }
     Database::addConnectionInfo('default', 'default', $connection_info['default']);
-    cache_clear_all('variables', 'cache_bootstrap');
+    cache('bootstrap')->expire();
+    cache_clear_all();
     $GLOBALS['conf'] = variable_initialize();
   }
 
